@@ -67,15 +67,13 @@ class OTPVerificationPage extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 "Enter your OTP code number",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.grey),
               ),
 
               SizedBox(height: screenHeight * 0.04),
 
               // OTP Boxes
+              // OTP Input Boxes
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -92,15 +90,42 @@ class OTPVerificationPage extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(4, (index) {
-                    return Container(
+                    return SizedBox(
                       width: 55,
                       height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFF8B2B9A),
-                          width: 1.6,
+                      child: TextField(
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        maxLength: 1,
+                        cursorColor: const Color(0xFF8B2B9A),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
+                        decoration: InputDecoration(
+                          counterText: "",
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF8B2B9A),
+                              width: 1.6,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF8B2B9A),
+                              width: 2.2,
+                            ),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          if (value.isNotEmpty && index < 3) {
+                            FocusScope.of(context).nextFocus();
+                          } else if (value.isEmpty && index > 0) {
+                            FocusScope.of(context).previousFocus();
+                          }
+                        },
                       ),
                     );
                   }),
