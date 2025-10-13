@@ -1,4 +1,4 @@
-import 'package:Tiffo/screens/signup_screen.dart';
+import 'package:Tifnova/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 

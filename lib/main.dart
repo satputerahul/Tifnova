@@ -1,7 +1,7 @@
-import 'package:Tiffo/screens/intro_page.dart';
+import 'package:Tifnova/screens/intro_page.dart';
 import 'package:flutter/material.dart';
-import 'package:Tiffo/screens/SplashScreen.dart';
-import 'package:Tiffo/screens/login_screen.dart'; // add this (future login page)
+import 'package:Tifnova/screens/SplashScreen.dart';
+import 'package:Tifnova/screens/login_screen.dart'; // add this (future login page)
 
 void main() {
   runApp(const MyApp());
@@ -42,7 +42,7 @@ class _TIFFINITYState extends State<TIFFINITY> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: const Center(
-        child: Text('Welcome to TIFFINITY!', style: TextStyle(fontSize: 20)),                             
+        child: Text('Welcome to TIFNOVA!', style: TextStyle(fontSize: 20)),                             
       ),
     );
   }
