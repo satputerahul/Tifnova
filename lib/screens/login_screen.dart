@@ -1,3 +1,4 @@
+import 'package:Tifnova/screens/home_screen.dart';
 import 'package:Tifnova/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -30,6 +31,7 @@ class _LoginPageState extends State<LoginPage> {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
 
+    /*
     if (email.isEmpty && password.isEmpty) {
       Fluttertoast.showToast(
         msg: "Please enter email and password",
@@ -50,7 +52,11 @@ class _LoginPageState extends State<LoginPage> {
         msg: "Login Successful",
         backgroundColor: Colors.green,
       );
-    }
+    } 
+    */
+
+    //Navigate to Home Screen
+    _homeScreen();
   }
 
   void _forgotPassword() {
@@ -68,7 +74,19 @@ class _LoginPageState extends State<LoginPage> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SignUpPage())
+      MaterialPageRoute(builder: (context) => const SignUpPage()),
+    );
+  }
+
+  void _homeScreen() {
+    Fluttertoast.showToast(
+      msg: 'Navigate to Home Screen',
+      backgroundColor: Colors.grey,
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MessListScreen()),
     );
   }
 
@@ -208,8 +226,7 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               const Expanded(child: Divider(color: borderColor)),
               Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
                 child: Text(
                   'Or sign in with',
                   style: TextStyle(
@@ -289,10 +306,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       child: TextField(
         controller: controller,
-        style: TextStyle(
-          fontSize: screenWidth * 0.04,
-          color: Colors.black,
-        ),
+        style: TextStyle(fontSize: screenWidth * 0.04, color: Colors.black),
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(
             horizontal: screenWidth * 0.04,
@@ -321,10 +335,7 @@ class _LoginPageState extends State<LoginPage> {
       child: TextField(
         controller: controller,
         obscureText: !_isPasswordVisible,
-        style: TextStyle(
-          fontSize: screenWidth * 0.04,
-          color: Colors.black,
-        ),
+        style: TextStyle(fontSize: screenWidth * 0.04, color: Colors.black),
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(
             horizontal: screenWidth * 0.04,

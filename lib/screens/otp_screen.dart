@@ -1,7 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class OTPVerificationPage extends StatelessWidget {
+class OTPVerificationPage extends StatefulWidget {
   const OTPVerificationPage({super.key});
+
+  @override
+  State<OTPVerificationPage> createState() => _OTPVerificationPageState();
+}
+
+class _OTPVerificationPageState extends State<OTPVerificationPage> {
+  late List<TextEditingController> _otpControllers;
+  late List<FocusNode> _focusNodes;
+
+  @override
+  void initState() {
+    super.initState();
+    _otpControllers = List.generate(4, (_) => TextEditingController());
+    _focusNodes = List.generate(4, (_) => FocusNode());
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _otpControllers) {
+      controller.dispose();
+    }
+    for (var focusNode in _focusNodes) {
+      focusNode.dispose();
+    }
+    super.dispose();
+  }
+
+  void _handleOtpChange(String value, int index) {
+    if (value.length == 1 && index < 3) {
+      _focusNodes[index + 1].requestFocus();
+    } else if (value.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    } else if (index == 3 && value.length == 1) {
+      FocusScope.of(context).unfocus();
+    }
+  }
+
+  String _getOtp() {
+    return _otpControllers.map((controller) => controller.text).join();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9,16 +50,15 @@ class OTPVerificationPage extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F5FF),
-      body: SingleChildScrollView(
+      backgroundColor: Colors.white,
+      body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            // Distribute space evenly among major sections
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              SizedBox(height: screenHeight * 0.08),
-
-              // Back Button
+              // Back Button (Start)
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
@@ -29,50 +69,35 @@ class OTPVerificationPage extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: screenHeight * 0.03),
-
-              // Illustration with shadow
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.deepPurple.withOpacity(0.2),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: 65,
-                  backgroundColor: Colors.white,
-                  child: Image.asset(
-                    'assets/otp_illustration.png',
-                    height: 100,
-                  ),
-                ),
+              // Image (Slightly reduced size for non-scrollable screen)
+              Image.asset(
+                'assets/images/otp.png',
+                height: screenHeight * 0.3, // Adjusted height
+                width: screenWidth * 0.95,
+                fit: BoxFit.contain,
               ),
-
-              SizedBox(height: screenHeight * 0.05),
 
               // Title and subtitle
-              const Text(
-                "Verification",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Enter your OTP code number",
-                style: TextStyle(fontSize: 15, color: Colors.grey),
+              Column(
+                children: const [
+                  Text(
+                    "Verification",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Enter your OTP code number",
+                    style: TextStyle(fontSize: 15, color: Colors.black87),
+                  ),
+                ],
               ),
 
-              SizedBox(height: screenHeight * 0.04),
+              // --- Reduced Space Here (Removed the large SizedBox) ---
 
-              // OTP Boxes
               // OTP Input Boxes
               Container(
                 padding: const EdgeInsets.all(16),
@@ -94,6 +119,8 @@ class OTPVerificationPage extends StatelessWidget {
                       width: 55,
                       height: 60,
                       child: TextField(
+                        controller: _otpControllers[index],
+                        focusNode: _focusNodes[index],
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
                         maxLength: 1,
@@ -102,6 +129,9 @@ class OTPVerificationPage extends StatelessWidget {
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                         decoration: InputDecoration(
                           counterText: "",
                           enabledBorder: OutlineInputBorder(
@@ -120,11 +150,7 @@ class OTPVerificationPage extends StatelessWidget {
                           ),
                         ),
                         onChanged: (value) {
-                          if (value.isNotEmpty && index < 3) {
-                            FocusScope.of(context).nextFocus();
-                          } else if (value.isEmpty && index > 0) {
-                            FocusScope.of(context).previousFocus();
-                          }
+                          _handleOtpChange(value, index);
                         },
                       ),
                     );
@@ -132,13 +158,18 @@ class OTPVerificationPage extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: screenHeight * 0.05),
+              // --- Reduced Space Here (SizedBox between OTP box and Verify button) ---
+              SizedBox(height: 15), // Adjusted fixed height
 
               // Verify Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    String completeOtp = _getOtp();
+                    print("The entered OTP is: $completeOtp");
+                    // Add your verification logic here
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B2B9A),
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -158,27 +189,32 @@ class OTPVerificationPage extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: screenHeight * 0.03),
+              // --- Reduced Space Here (SizedBox between Verify button and Resend Text) ---
+              SizedBox(height: 15), // Adjusted fixed height
 
               // Resend Text
-              const Text(
-                "Didn't receive any code?",
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: () {},
-                child: const Text(
-                  "Resend New Code",
-                  style: TextStyle(
-                    color: Color(0xFF8B2B9A),
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.underline,
+              Column(
+                children: [
+                  const Text(
+                    "Didn't receive any code?",
+                    style: TextStyle(color: Colors.black87),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  GestureDetector(
+                    onTap: () {
+                      // Add resend logic here
+                    },
+                    child: const Text(
+                      "Resend New Code",
+                      style: TextStyle(
+                        color: Color(0xFF8B2B9A),
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-
-              SizedBox(height: screenHeight * 0.08),
             ],
           ),
         ),

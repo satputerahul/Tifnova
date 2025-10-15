@@ -16,7 +16,6 @@ class _SignUpPageState extends State<SignUpPage> {
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
@@ -26,19 +25,16 @@ class _SignUpPageState extends State<SignUpPage> {
   void dispose() {
     _emailController.dispose();
     _mobileController.dispose();
-    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  /// ✅ Register & Navigate to OTP
   void _register() {
     String email = _emailController.text.trim();
     String mobile = _mobileController.text.trim();
-    String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
 
-    if (email.isEmpty || mobile.isEmpty || username.isEmpty || password.isEmpty) {
+    if (email.isEmpty || mobile.isEmpty || password.isEmpty) {
       Fluttertoast.showToast(
         msg: "Please fill all required fields",
         backgroundColor: Colors.red,
@@ -54,7 +50,6 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
-    // ✅ Navigate to OTP screen
     Fluttertoast.showToast(
       msg: "OTP sent to $mobile",
       backgroundColor: Colors.green,
@@ -76,180 +71,165 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width * 0.9; 
+    final screenHeight = MediaQuery.of(context).size.height * 0.9;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.08,
-              vertical: screenHeight * 0.03,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // --- Title ---
-                Text(
-                  'Create your new\naccount',
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.075,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.08,
+            vertical: screenHeight * 0.03,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- Title ---
+              Text(
+                'Create your new\naccount',
+                style: TextStyle(
+                  fontSize: screenWidth * 0.085,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
-                SizedBox(height: screenHeight * 0.008),
+              ),
+              SizedBox(height: screenHeight * 0.008),
 
-                Text(
-                  'Create an account to explore your favorite meals and manage orders easily.',
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.038,
-                    color: Colors.black87,
-                  ),
+              Text(
+                'Create an account to explore your favorite meals and manage orders easily.',
+                style: TextStyle(
+                  fontSize: screenWidth * 0.04,
+                  color: Colors.black87,
                 ),
-                SizedBox(height: screenHeight * 0.03),
+              ),
+              SizedBox(height: screenHeight * 0.03),
 
-                _buildLabel('Email Address', screenWidth),
-                SizedBox(height: screenHeight * 0.008),
-                _buildInputField(
-                  controller: _emailController,
-                  hintText: 'Enter your Email',
-                  keyboardType: TextInputType.emailAddress,
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
-                ),
-                SizedBox(height: screenHeight * 0.02),
+              _buildLabel('Email Address', screenWidth),
+              SizedBox(height: screenHeight * 0.008),
+              _buildInputField(
+                controller: _emailController,
+                hintText: 'Enter your Email',
+                keyboardType: TextInputType.emailAddress,
+                screenWidth: screenWidth,
+                screenHeight: screenHeight,
+              ),
+              SizedBox(height: screenHeight * 0.02),
 
-                _buildLabel('Mobile Number', screenWidth),
-                SizedBox(height: screenHeight * 0.008),
-                _buildMobileInputField(
-                  controller: _mobileController,
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
-                ),
-                SizedBox(height: screenHeight * 0.02),
+              _buildLabel('Mobile Number', screenWidth),
+              SizedBox(height: screenHeight * 0.008),
+              _buildMobileInputField(
+                controller: _mobileController,
+                screenWidth: screenWidth,
+                screenHeight: screenHeight,
+              ),
+              SizedBox(height: screenHeight * 0.02),
 
-                _buildLabel('User Name', screenWidth),
-                SizedBox(height: screenHeight * 0.008),
-                _buildInputField(
-                  controller: _usernameController,
-                  hintText: 'Enter Username',
-                  keyboardType: TextInputType.text,
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
-                ),
-                SizedBox(height: screenHeight * 0.02),
+              _buildLabel('Password', screenWidth),
+              SizedBox(height: screenHeight * 0.008),
+              _buildPasswordInputField(
+                controller: _passwordController,
+                hintText: 'Enter a Password',
+                screenWidth: screenWidth,
+                screenHeight: screenHeight,
+              ),
+              SizedBox(height: screenHeight * 0.02),
 
-                _buildLabel('Password', screenWidth),
-                SizedBox(height: screenHeight * 0.008),
-                _buildPasswordInputField(
-                  controller: _passwordController,
-                  hintText: 'Enter a Password',
-                  screenWidth: screenWidth,
-                  screenHeight: screenHeight,
-                ),
-                SizedBox(height: screenHeight * 0.02),
+              _buildTermsAndPrivacy(screenWidth),
+              SizedBox(height: screenHeight * 0.025),
 
-                _buildTermsAndPrivacy(screenWidth),
-                SizedBox(height: screenHeight * 0.025),
-
-                // --- Register Button ---
-                SizedBox(
-                  width: double.infinity,
-                  height: screenHeight * 0.065,
-                  child: ElevatedButton(
-                    onPressed: _register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
+              // --- Register Button ---
+              SizedBox(
+                width: double.infinity,
+                height: screenHeight * 0.065,
+                child: ElevatedButton(
+                  onPressed: _register,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Register',
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.045,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.03),
+
+              // --- Divider ---
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: borderColor)),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
                     child: Text(
-                      'Register',
+                      'Or sign up with',
                       style: TextStyle(
-                        fontSize: screenWidth * 0.045,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black87,
+                        fontSize: screenWidth * 0.037,
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: screenHeight * 0.03),
+                  const Expanded(child: Divider(color: borderColor)),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.03),
 
-                // --- Divider ---
-                Row(
-                  children: [
-                    const Expanded(child: Divider(color: borderColor)),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
-                      child: Text(
-                        'Or sign up with',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: screenWidth * 0.035,
-                        ),
-                      ),
-                    ),
-                    const Expanded(child: Divider(color: borderColor)),
-                  ],
-                ),
-                SizedBox(height: screenHeight * 0.03),
+              // --- Social Buttons ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildSocialButton(
+                    imagePath: "assets/icons/google.png",
+                    size: screenWidth * 0.15,
+                    onPressed: () {
+                      Fluttertoast.showToast(msg: "Google signup clicked");
+                    },
+                  ),
+                  SizedBox(width: screenWidth * 0.08),
+                  _buildSocialButton(
+                    imagePath: "assets/icons/apple.png",
+                    size: screenWidth * 0.15,
+                    onPressed: () {
+                      Fluttertoast.showToast(msg: "Apple signup clicked");
+                    },
+                  ),
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.04),
 
-                // --- Social Buttons ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildSocialButton(
-                      imagePath: "assets/icons/google.png",
-                      size: screenWidth * 0.15,
-                      onPressed: () {
-                        Fluttertoast.showToast(msg: "Google signup clicked");
-                      },
+              // --- Sign In Link ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Already have an account? ",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.04,
+                      color: Colors.black,
                     ),
-                    SizedBox(width: screenWidth * 0.08),
-                    _buildSocialButton(
-                      imagePath: "assets/icons/apple.png",
-                      size: screenWidth * 0.15,
-                      onPressed: () {
-                        Fluttertoast.showToast(msg: "Apple signup clicked");
-                      },
-                    ),
-                  ],
-                ),
-                SizedBox(height: screenHeight * 0.04),
-
-                // --- Sign In Link ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Already have an account? ",
+                  ),
+                  GestureDetector(
+                    onTap: _signIn,
+                    child: Text(
+                      'Sign in',
                       style: TextStyle(
                         fontSize: screenWidth * 0.04,
-                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: _signIn,
-                      child: Text(
-                        'Sign in',
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.04,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: screenHeight * 0.03),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -409,7 +389,7 @@ class _SignUpPageState extends State<SignUpPage> {
             text: TextSpan(
               text: 'I Agree with ',
               style: TextStyle(
-                fontSize: screenWidth * 0.035,
+                fontSize: screenWidth * 0.038,
                 color: Colors.black,
               ),
               children: [
