@@ -13,7 +13,7 @@ class _IntroPageState extends State<IntroPage> {
 
   final List<Map<String, String>> _introData = [
     {
-      "image": "assets/images/tiffo.png",
+      "image": "assets/images/tifnova.png",
       "title": "Welcome to Tiffo",
       "description": "Order delicious meals and enjoy effortless delivery.",
     },

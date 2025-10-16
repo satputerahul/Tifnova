@@ -23,10 +23,10 @@ class _TIFFINITYSplashScreenState extends State<TIFFINITYSplashScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA), // Deep Purple background
+      backgroundColor: Colors.white, // Deep Purple background
       body: Center(
         child: Image.asset(
-          'assets/gifs/Tiffinity.gif',
+          'assets/gifs/tifnova.gif',
           width: screenWidth * 0.9, // 60% of screen width
           height:
               screenHeight * 0.9, // 25% of screen height (suits most screens)

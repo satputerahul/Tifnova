@@ -39,7 +39,7 @@ class TIFFINITY extends StatefulWidget {
 class _TIFFINITYState extends State<TIFFINITY> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Scaffold(  
       appBar: AppBar(title: Text(widget.title)),
       body: const Center(
         child: Text('Welcome to TIFNOVA!', style: TextStyle(fontSize: 20)),                             
