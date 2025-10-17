@@ -71,19 +71,10 @@ class _MessListScreenState extends State<MessListScreen> {
 
   Future<void> _handleRefresh() async {
     // Simulate a network delay or data fetching time
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 1000));
     // In a real app, you would call setState() here to update your data:
     // setState(() { messes = fetchNewMesses(); });
 
-    // Show a snackbar to confirm refresh (optional)
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Feed refreshed!'),
-          duration: Duration(seconds: 1),
-        ),
-      );
-    }
   }
 
   // --- Helper Widgets ---
