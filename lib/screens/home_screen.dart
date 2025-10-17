@@ -1,4 +1,5 @@
 import 'package:Tifnova/screens/login_screen.dart';
+import 'package:Tifnova/screens/messMenu_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -17,25 +18,28 @@ class _MessListScreenState extends State<MessListScreen> {
   List<Map<String, String>> messes = [
     {
       "name": "Patil Mess",
-      "description": "Daily changing traditional Maharashtrian thali.", // Updated to be veg
+      "description":
+          "Daily changing traditional Maharashtrian thali.", // Updated to be veg
       "rating": "4.7",
-      "image": "assets/images/PatilKhanawal.png", 
+      "image": "assets/images/PatilKhanawal.png",
       "time": "20 min",
       "delivery": "Free",
     },
     {
       "name": "Sadanand Upharagruha",
-      "description": "Authentic vegetarian snacks and meals.", // Already vegetarian
+      "description":
+          "Authentic vegetarian snacks and meals.", // Already vegetarian
       "rating": "4.7",
-      "image": "assets/images/sadanandUphargruha.png", 
+      "image": "assets/images/sadanandUphargruha.png",
       "time": "20 min",
       "delivery": "Free",
     },
     {
       "name": "Annapurna Mess",
-      "description": "Daily home cooked all-you-can-eat.", // Updated to be general veg
+      "description":
+          "Daily home cooked all-you-can-eat.", // Updated to be general veg
       "rating": "4.3",
-      "image": "assets/images/AnnapurnaMess.jpeg", 
+      "image": "assets/images/AnnapurnaMess.jpeg",
       "time": "30 min",
       "delivery": "₹20",
     },
@@ -43,15 +47,16 @@ class _MessListScreenState extends State<MessListScreen> {
       "name": "Amruta Mess",
       "description": "Coconut-rich South Indian meals.", // Already vegetarian
       "rating": "4.6",
-      "image": "assets/images/AmrutaMess.jpeg", 
+      "image": "assets/images/AmrutaMess.jpeg",
       "time": "25 min",
       "delivery": "Free",
     },
     {
       "name": "Swadistam",
-      "description": "Modern North Indian tiffin service.", // Already vegetarian
+      "description":
+          "Modern North Indian tiffin service.", // Already vegetarian
       "rating": "4.6",
-      "image": "assets/images/Swadistam.png", 
+      "image": "assets/images/Swadistam.png",
       "time": "25 min",
       "delivery": "Free",
     },
@@ -74,7 +79,6 @@ class _MessListScreenState extends State<MessListScreen> {
     await Future.delayed(const Duration(milliseconds: 1000));
     // In a real app, you would call setState() here to update your data:
     // setState(() { messes = fetchNewMesses(); });
-
   }
 
   // --- Helper Widgets ---
@@ -85,6 +89,9 @@ class _MessListScreenState extends State<MessListScreen> {
     Color? color,
     double? width,
     double? height,
+    BoxFit fit = BoxFit.contain,
+    // *** 1. ADDED ALIGNMENT PARAMETER ***
+    Alignment alignment = Alignment.center,
   }) {
     // NOTE: Ensure these asset paths exist in your pubspec.yaml and project structure.
     return Image.asset(
@@ -92,7 +99,9 @@ class _MessListScreenState extends State<MessListScreen> {
       width: width,
       height: height,
       color: color,
-      fit: BoxFit.contain,
+      fit: fit,
+      // *** USE THE ALIGNMENT PARAMETER ***
+      alignment: alignment,
     );
   }
 
@@ -117,7 +126,12 @@ class _MessListScreenState extends State<MessListScreen> {
             ],
           ),
           child: ClipOval(
-            child: _customAssetImage(category['image']!, width: 70, height: 70),
+            child: _customAssetImage(
+              category['image']!,
+              width: 70,
+              height: 70,
+              fit: BoxFit.cover, // Ensures category image fills circle
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -129,71 +143,72 @@ class _MessListScreenState extends State<MessListScreen> {
     );
   }
 
-  // Widget to build a single Kitchen card item
-  Widget _buildKitchenCard(Map<String, String> mess) {
-    return Container(
-      width: 250, // Fixed width for horizontal scroll
-      margin: const EdgeInsets.only(right: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
+Widget _buildKitchenCard(Map<String, String> mess) {
+  return Container(
+    width: 250, 
+    margin: const EdgeInsets.only(right: 15),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.1),
+          spreadRadius: 1,
+          blurRadius: 3,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Stack(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(10),
+              ),
+              child: _customAssetImage(
+                mess['image']!,
+                height: 140, 
+                width: double.infinity, 
+                
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.favorite_border,
+                  color: Color(0xFF870474),
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Text content starts here
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(10),
-                ),
-                child: _customAssetImage(
-                  mess['image']!,
-                  height: 140, // Image height
-                  width: double.infinity,
-                ),
-              ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 1,
-                        blurRadius: 3,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.favorite_border,
-                    color: Color(0xFF870474),
-                    size: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
                     Text(
                       mess['name']!,
                       style: const TextStyle(
@@ -203,12 +218,11 @@ class _MessListScreenState extends State<MessListScreen> {
                     ),
                     Row(
                       children: [
-                        // Replaced const Icon(Icons.star, ...) with custom asset image
                         _customAssetImage(
-                          'assets/icons/star.png', // **ASSUMING THIS IS YOUR STAR ICON PATH**
+                          'assets/icons/star.png', 
                           color: const Color(
                             0xFFFFC107,
-                          ), // Apply the yellow color to the asset
+                          ), 
                           width: 16,
                           height: 16,
                         ),
@@ -224,53 +238,52 @@ class _MessListScreenState extends State<MessListScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  mess['description']!,
-                  style: const TextStyle(fontSize: 13, color: Colors.grey),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.timer_outlined,
-                      color: Colors.grey,
-                      size: 16,
+              const SizedBox(height: 4), 
+              Text(
+                mess['description']!,
+                style: const TextStyle(fontSize: 13, color: Colors.grey),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8), 
+              Row(
+                children: [
+                  const Icon(
+                    Icons.timer_outlined,
+                    color: Colors.grey,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    mess['time']!,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 12),
+                  const Icon(
+                    Icons.delivery_dining_outlined,
+                    color: Colors.grey,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    mess['delivery']!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: mess['delivery'] == 'Free'
+                          ? Colors.green
+                          : Colors.grey,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      mess['time']!,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(
-                      Icons.delivery_dining_outlined,
-                      color: Colors.grey,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      mess['delivery']!,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: mess['delivery'] == 'Free'
-                            ? Colors.green
-                            : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   // --- Drawer (Sidebar) ---
-
   Widget _buildDrawer() {
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.75,
@@ -692,17 +705,26 @@ class _MessListScreenState extends State<MessListScreen> {
               ),
               // Horizontal Scrollable List for Kitchen Cards
               SizedBox(
-                height: 240, // Adjusted height to fit the card design correctly
+                height: 250, 
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   itemCount: messes.length,
                   itemBuilder: (context, index) {
-                    return _buildKitchenCard(messes[index]);
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MessMenuScreen(mess: [messes[index]]), // Wrap in a list
+                          ),
+                        );
+                      },
+                      child: _buildKitchenCard(messes[index]),
+                    );
                   },
                 ),
               ),
-
               const SizedBox(height: 25),
 
               // --- Explore by Dishes Button ---
