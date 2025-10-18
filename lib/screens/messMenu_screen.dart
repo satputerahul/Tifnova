@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:Tifnova/screens/addCart.dart';
 
 class MessMenuScreen extends StatefulWidget {
   final List<Map<String, String>> mess;
+  final List<Map<String, String>> allMesses;
 
-  const MessMenuScreen({super.key, required this.mess});
+  const MessMenuScreen({
+    super.key,
+    required this.mess,
+    required this.allMesses,
+  });
 
   @override
   State<MessMenuScreen> createState() => _MessMenuScreenState();
 }
 
 class _MessMenuScreenState extends State<MessMenuScreen> {
-  int totalQuantity = 0;
+  // We no longer track totalQuantity as a sum, 
+  // but we will calculate the number of distinct items.
+  int _distinctItemCount = 0; 
   double totalPrice = 0.0;
 
   List<Map<String, dynamic>> menuList = [
@@ -101,21 +109,40 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
     return double.tryParse(numericPrice) ?? 0.0;
   }
 
+  // New function to calculate total price and distinct item count
+  void _recalculateCart() {
+    double newTotalPrice = 0.0;
+    int newDistinctItemCount = 0;
+
+    for (var item in menuList) {
+      final quantity = item['quantity'] as int;
+      if (quantity > 0) {
+        newDistinctItemCount++;
+        final itemPrice = _parsePrice(item['price'] as String);
+        newTotalPrice += itemPrice * quantity;
+      }
+    }
+
+    setState(() {
+      totalPrice = newTotalPrice;
+      _distinctItemCount = newDistinctItemCount;
+    });
+  }
+
   void _updateCart(int index, bool isIncrement) {
     setState(() {
       final item = menuList[index];
-      double itemPrice = _parsePrice(item['price'] as String);
       int currentQuantity = item['quantity'] as int;
 
+      // 1. Update the item's quantity locally
       if (isIncrement) {
         item['quantity'] = currentQuantity + 1;
-        totalQuantity++;
-        totalPrice += itemPrice;
       } else if (currentQuantity > 0) {
         item['quantity'] = currentQuantity - 1;
-        totalQuantity--;
-        totalPrice -= itemPrice;
       }
+
+      // 2. Recalculate the entire cart summary
+      _recalculateCart();
     });
   }
 
@@ -134,6 +161,8 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
               builder: (context) => AddToCart(
                 selectedItems: selectedItems,
                 totalPrice: totalPrice,
+                // ✅ PASS THE LIST RECEIVED BY THIS SCREEN
+                similarMeals: widget.allMesses,
               ),
             ),
           );
@@ -158,7 +187,8 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      '$totalQuantity',
+                      // Use the distinct item count (1, 2, 3...)
+                      '$_distinctItemCount', 
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
@@ -209,7 +239,8 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
         ],
         elevation: 0,
       ),
-      bottomNavigationBar: totalQuantity > 0 ? _buildCartButton() : null,
+      // Use the distinct item count to decide visibility
+      bottomNavigationBar: _distinctItemCount > 0 ? _buildCartButton() : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
@@ -286,7 +317,7 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
   }
 }
 
-// MENU ITEM CARD
+// MENU ITEM CARD (Updated quantity display logic for better contrast)
 class MenuItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final int index;
@@ -302,6 +333,7 @@ class MenuItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int currentQuantity = item['quantity'] as int;
+    final primaryPurple = const Color(0xFF870474);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
@@ -378,12 +410,13 @@ class MenuItemCard extends StatelessWidget {
                         onTap: currentQuantity > 0
                             ? () => onQuantityChanged(index, false)
                             : null,
-                        child: const Padding(
-                          padding: EdgeInsets.all(3),
+                        child: Padding(
+                          padding: const EdgeInsets.all(3),
                           child: Icon(
                             Icons.remove,
                             size: 16,
-                            color: Colors.grey,
+                            // Change color based on availability
+                            color: currentQuantity > 0 ? primaryPurple : Colors.grey.shade400,
                           ),
                         ),
                       ),
@@ -401,9 +434,9 @@ class MenuItemCard extends StatelessWidget {
                         onTap: () => onQuantityChanged(index, true),
                         child: Container(
                           padding: const EdgeInsets.all(3),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Color(0xFF870474),
+                            color: primaryPurple,
                           ),
                           child: const Icon(
                             Icons.add,
@@ -416,165 +449,6 @@ class MenuItemCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class AddToCart extends StatelessWidget {
-  final List<Map<String, dynamic>> selectedItems;
-  final double totalPrice;
-
-  const AddToCart({
-    super.key,
-    required this.selectedItems,
-    required this.totalPrice,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text("Your Cart"),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: Colors.black,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: selectedItems.length,
-              itemBuilder: (context, index) {
-                final item = selectedItems[index];
-                double price =
-                    double.parse(
-                      item["price"].replaceAll(RegExp(r'[^\d.]'), ''),
-                    ) *
-                    item['quantity'];
-                return ListTile(
-                  leading: Image.asset(
-                    item["image"],
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                  ),
-                  title: Text(
-                    item["dishName"],
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text("Qty: ${item['quantity']}"),
-                  trailing: Text(
-                    "₹ ${price.toStringAsFixed(0)}",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Discover Similar Meals",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 160,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  return Container(
-                    width: 150,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(10),
-                          ),
-                          child: Image.asset(
-                            'assets/images/thali.png',
-                            height: 90,
-                            width: 150,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Patil Tiffin",
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              Text(
-                                "₹120",
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.grey.shade100,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Total (incl. taxes)",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    "₹ ${totalPrice.toStringAsFixed(0)}",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF870474),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                onPressed: () {},
-                child: const Text(
-                  "Confirm Payment & Address",
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
             ),
           ],
         ),

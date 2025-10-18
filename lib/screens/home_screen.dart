@@ -2,6 +2,7 @@ import 'package:Tifnova/screens/login_screen.dart';
 import 'package:Tifnova/screens/messMenu_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'addCart.dart';
 
 class MessListScreen extends StatefulWidget {
   const MessListScreen({super.key});
@@ -12,6 +13,22 @@ class MessListScreen extends StatefulWidget {
 class _MessListScreenState extends State<MessListScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // ✅ STATE VARIABLES: To manage the cart badge visibility and data
+  // Set _cartItemCount to 0 to test the empty cart badge (no badge displayed).
+  int _cartItemCount = 1; // 0 for empty cart, > 0 for items
+  double _cartTotalPrice = 120.0;
+  
+  // ✅ MOCK FULL CART ITEM: This variable is no longer used for passing data,
+  // but kept here as it was in your original code block.
+  final List<Map<String, dynamic>> _mockFullCartItems = const [
+    {
+      "dishName": "Patil Tiffin Special",
+      "price": "₹120",
+      "quantity": 1,
+      "image": "assets/images/thali.png",
+    }
+  ];
+
   // --- Mock Data ---
 
   // Kitchens Data (used for the 'Explore Kitchens' section)
@@ -19,7 +36,7 @@ class _MessListScreenState extends State<MessListScreen> {
     {
       "name": "Patil Mess",
       "description":
-          "Daily changing traditional Maharashtrian thali.", // Updated to be veg
+          "Daily changing traditional Maharashtrian thali.", 
       "rating": "4.7",
       "image": "assets/images/PatilKhanawal.png",
       "time": "20 min",
@@ -28,7 +45,7 @@ class _MessListScreenState extends State<MessListScreen> {
     {
       "name": "Sadanand Upharagruha",
       "description":
-          "Authentic vegetarian snacks and meals.", // Already vegetarian
+          "Authentic vegetarian snacks and meals.", 
       "rating": "4.7",
       "image": "assets/images/sadanandUphargruha.png",
       "time": "20 min",
@@ -37,7 +54,7 @@ class _MessListScreenState extends State<MessListScreen> {
     {
       "name": "Annapurna Mess",
       "description":
-          "Daily home cooked all-you-can-eat.", // Updated to be general veg
+          "Daily home cooked all-you-can-eat.", 
       "rating": "4.3",
       "image": "assets/images/AnnapurnaMess.jpeg",
       "time": "30 min",
@@ -45,7 +62,7 @@ class _MessListScreenState extends State<MessListScreen> {
     },
     {
       "name": "Amruta Mess",
-      "description": "Coconut-rich South Indian meals.", // Already vegetarian
+      "description": "Coconut-rich South Indian meals.", 
       "rating": "4.6",
       "image": "assets/images/AmrutaMess.jpeg",
       "time": "25 min",
@@ -54,7 +71,7 @@ class _MessListScreenState extends State<MessListScreen> {
     {
       "name": "Swadistam",
       "description":
-          "Modern North Indian tiffin service.", // Already vegetarian
+          "Modern North Indian tiffin service.", 
       "rating": "4.6",
       "image": "assets/images/Swadistam.png",
       "time": "25 min",
@@ -90,7 +107,6 @@ class _MessListScreenState extends State<MessListScreen> {
     double? width,
     double? height,
     BoxFit fit = BoxFit.contain,
-    // *** 1. ADDED ALIGNMENT PARAMETER ***
     Alignment alignment = Alignment.center,
   }) {
     // NOTE: Ensure these asset paths exist in your pubspec.yaml and project structure.
@@ -100,7 +116,6 @@ class _MessListScreenState extends State<MessListScreen> {
       height: height,
       color: color,
       fit: fit,
-      // *** USE THE ALIGNMENT PARAMETER ***
       alignment: alignment,
     );
   }
@@ -432,6 +447,9 @@ Widget _buildKitchenCard(Map<String, String> mess) {
 
   @override
   Widget build(BuildContext context) {
+    // Determine the number to show in the cart badge
+    final bool isCartBadgeVisible = _cartItemCount > 0;
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(),
@@ -526,31 +544,55 @@ Widget _buildKitchenCard(Map<String, String> mess) {
                                     width: 35,
                                     height: 35,
                                   ),
-                                  onPressed: () {},
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  top: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF870474),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 18,
-                                      minHeight: 18,
-                                    ),
-                                    child: const Text(
-                                      '1',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
+                                  // ✅ UPDATED CART NAVIGATION LOGIC
+                                  onPressed: () {
+                                    // Always pass an empty list of selected items as per your request.
+                                    // The AddToCart screen will decide whether to display content or the empty state
+                                    // based on the total price or if it fetches the true cart state internally.
+                                    final List<Map<String, dynamic>> finalSelectedItems = []; 
+                                    
+                                    // Pass the total price based on the mock state for AddToCart to use.
+                                    final double finalTotalPrice = isCartBadgeVisible 
+                                        ? _cartTotalPrice 
+                                        : 0.0;
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddToCart(
+                                          selectedItems: finalSelectedItems, // Always empty list
+                                          totalPrice: finalTotalPrice,
+                                          similarMeals: messes, 
+                                        ),
                                       ),
-                                      textAlign: TextAlign.center,
+                                    );
+                                  },
+                                ),
+                                // Cart count bubble (only visible if data is present)
+                                if (isCartBadgeVisible) 
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF870474),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 18,
+                                        minHeight: 18,
+                                      ),
+                                      child: Text(
+                                        '$_cartItemCount', // Display the state count
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
                                   ),
-                                ),
                               ],
                             ),
                           ],
@@ -716,7 +758,7 @@ Widget _buildKitchenCard(Map<String, String> mess) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MessMenuScreen(mess: [messes[index]]), // Wrap in a list
+                            builder: (context) => MessMenuScreen(mess: [messes[index]], allMesses: messes), // Wrap in a list
                           ),
                         );
                       },
