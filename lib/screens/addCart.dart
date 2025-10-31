@@ -185,139 +185,98 @@ class _AddToCartState extends State<AddToCart> {
   // --- Similar Meal Card Widget ---
   // (Keep _buildSimilarMealCard as is)
   Widget _buildSimilarMealCard(Map<String, String> mess) {
-    return Container(
-      width: 150,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+  return Container(
+    width: 180,
+    margin: const EdgeInsets.only(right: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.1),
+          blurRadius: 6,
+          spreadRadius: 2,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          child: Image.asset(
+            mess['image']!,
+            height: 120,
+            width: double.infinity,
+            fit: BoxFit.cover,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(10),
-                ),
-                child: Image.asset(
-                  mess['image']!,
-                  height: 90,
-                  width: 150,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 90,
-                    width: 150,
-                    color: Colors.grey[200],
-                    child: const Center(child: Text("No Image")),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 5,
-                right: 5,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.favorite_border,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      mess['name']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Text(
-                        mess['rating']!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const Icon(Icons.star, color: Colors.amber, size: 12),
-                    ],
+                  const SizedBox(width: 4),
+                  const Icon(Icons.star, color: Colors.amber, size: 14),
+                  Text(
+                    mess['rating']!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
-                ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                mess['description']!,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(Icons.access_time, color: Colors.grey, size: 12),
+                  const SizedBox(width: 4),
+                  Text(
+                    mess['time']!,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                  const Text(" • ", style: TextStyle(color: Colors.grey)),
+                  const Icon(Icons.delivery_dining, color: Colors.grey, size: 12),
+                  const SizedBox(width: 4),
+                  Text(
+                    mess['delivery']!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: mess['delivery'] == 'Free'
+                            ? Colors.green : Colors.grey,
+                      ),
+                  ),
+                ],
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  mess['name']!,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  mess['description']!,
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, color: Colors.grey, size: 12),
-                    const SizedBox(width: 4),
-                    Text(
-                      mess['time']!,
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                    const Text(
-                      ' • ',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                    const Icon(
-                      Icons.delivery_dining,
-                      color: Colors.grey,
-                      size: 12,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      mess['delivery']!,
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
 
   // --- Main Build Method ---
   @override
@@ -472,7 +431,7 @@ class _AddToCartState extends State<AddToCart> {
                               ],
                             ),
                           );
-                        }).toList(),
+                        }),
 
                         const Divider(height: 30, thickness: 1),
 
@@ -519,7 +478,7 @@ class _AddToCartState extends State<AddToCart> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.grey.withValues(),
                     spreadRadius: 1,
                     blurRadius: 5,
                     offset: const Offset(0, -3),

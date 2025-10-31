@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const MessListScreen()),
+      MaterialPageRoute(builder: (context) => const MessListScreen(mess: [], allMesses: [],)),
     );
   }
 

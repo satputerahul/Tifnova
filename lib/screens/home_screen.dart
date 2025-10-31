@@ -1,3 +1,4 @@
+import 'package:Tifnova/screens/like_menu.dart';
 import 'package:Tifnova/screens/login_screen.dart';
 import 'package:Tifnova/screens/messMenu_screen.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +6,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'addCart.dart';
 
 class MessListScreen extends StatefulWidget {
-  const MessListScreen({super.key});
+  const MessListScreen({super.key, required List<Map<String, String>> mess, required List<Map<String, String>> allMesses});
   @override
   State<MessListScreen> createState() => _MessListScreenState();
 }
@@ -17,7 +18,7 @@ class _MessListScreenState extends State<MessListScreen> {
   // Set _cartItemCount to 0 to test the empty cart badge (no badge displayed).
   int _cartItemCount = 1; // 0 for empty cart, > 0 for items
   double _cartTotalPrice = 120.0;
-  
+
   // ✅ MOCK FULL CART ITEM: This variable is no longer used for passing data,
   // but kept here as it was in your original code block.
   final List<Map<String, dynamic>> _mockFullCartItems = const [
@@ -26,7 +27,7 @@ class _MessListScreenState extends State<MessListScreen> {
       "price": "₹120",
       "quantity": 1,
       "image": "assets/images/thali.png",
-    }
+    },
   ];
 
   // --- Mock Data ---
@@ -35,8 +36,7 @@ class _MessListScreenState extends State<MessListScreen> {
   List<Map<String, String>> messes = [
     {
       "name": "Patil Mess",
-      "description":
-          "Daily changing traditional Maharashtrian thali.", 
+      "description": "Daily changing traditional Maharashtrian thali.",
       "rating": "4.7",
       "image": "assets/images/PatilKhanawal.png",
       "time": "20 min",
@@ -44,8 +44,7 @@ class _MessListScreenState extends State<MessListScreen> {
     },
     {
       "name": "Sadanand Upharagruha",
-      "description":
-          "Authentic vegetarian snacks and meals.", 
+      "description": "Authentic vegetarian snacks and meals.",
       "rating": "4.7",
       "image": "assets/images/sadanandUphargruha.png",
       "time": "20 min",
@@ -53,8 +52,7 @@ class _MessListScreenState extends State<MessListScreen> {
     },
     {
       "name": "Annapurna Mess",
-      "description":
-          "Daily home cooked all-you-can-eat.", 
+      "description": "Daily home cooked all-you-can-eat.",
       "rating": "4.3",
       "image": "assets/images/AnnapurnaMess.jpeg",
       "time": "30 min",
@@ -62,7 +60,7 @@ class _MessListScreenState extends State<MessListScreen> {
     },
     {
       "name": "Amruta Mess",
-      "description": "Coconut-rich South Indian meals.", 
+      "description": "Coconut-rich South Indian meals.",
       "rating": "4.6",
       "image": "assets/images/AmrutaMess.jpeg",
       "time": "25 min",
@@ -70,8 +68,7 @@ class _MessListScreenState extends State<MessListScreen> {
     },
     {
       "name": "Swadistam",
-      "description":
-          "Modern North Indian tiffin service.", 
+      "description": "Modern North Indian tiffin service.",
       "rating": "4.6",
       "image": "assets/images/Swadistam.png",
       "time": "25 min",
@@ -88,6 +85,8 @@ class _MessListScreenState extends State<MessListScreen> {
     {"name": "Paratha", "image": "assets/images/paratha.jpeg"},
     {"name": "South Indian", "image": "assets/images/southIndian.jpeg"},
   ];
+
+  List<Map<String, String>> favoriteList = [];
 
   // --- Refresh Function ---
 
@@ -158,16 +157,16 @@ class _MessListScreenState extends State<MessListScreen> {
     );
   }
 
-Widget _buildKitchenCard(Map<String, String> mess) {
+  Widget _buildKitchenCard(Map<String, String> mess) {
   return Container(
-    width: 250, 
+    width: 250,
     margin: const EdgeInsets.only(right: 15),
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(10),
       boxShadow: [
         BoxShadow(
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withOpacity(0.2),
           spreadRadius: 1,
           blurRadius: 3,
           offset: const Offset(0, 2),
@@ -179,43 +178,80 @@ Widget _buildKitchenCard(Map<String, String> mess) {
       children: [
         Stack(
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(10),
-              ),
-              child: _customAssetImage(
-                mess['image']!,
-                height: 140, 
-                width: double.infinity, 
-                
+            // ✅ Image of Mess (tappable area to open next page)
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MessMenuScreen(
+                      mess: [mess],
+                      allMesses: messes,
+                    ),
+                  ),
+                );
+              },
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(10),
+                ),
+                child: _customAssetImage(
+                  mess['image']!,
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
+
+            // ✅ Favorite (heart) icon as image
             Positioned(
               top: 10,
               right: 10,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 3,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.favorite_border,
-                  color: Color(0xFF870474),
-                  size: 20,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (favoriteList.contains(mess)) {
+                      favoriteList.remove(mess);
+                      Fluttertoast.showToast(
+                        msg: "${mess['name']} removed from Likes",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: Colors.black54,
+                        textColor: Colors.white,
+                      );
+                    } else {
+                      favoriteList.add(mess);
+                      Fluttertoast.showToast(
+                        msg: "${mess['name']} added to Likes",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: Colors.black54,
+                        textColor: Colors.white,
+                      );
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Image.asset(
+                    favoriteList.contains(mess)
+                        ? 'assets/icons/unlike.png'
+                        : 'assets/icons/like.png',
+                    width: 28,
+                    height: 28,
+                  ),
                 ),
               ),
             ),
           ],
         ),
-        // Text content starts here
+
+        // ✅ Text content section
         Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -224,60 +260,52 @@ Widget _buildKitchenCard(Map<String, String> mess) {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                    Text(
-                      mess['name']!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                  Text(
+                    mess['name']!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      _customAssetImage(
+                        'assets/icons/star.png',
+                        color: const Color(0xFFFFC107),
+                        width: 16,
+                        height: 16,
                       ),
-                    ),
-                    Row(
-                      children: [
-                        _customAssetImage(
-                          'assets/icons/star.png', 
-                          color: const Color(
-                            0xFFFFC107,
-                          ), 
-                          width: 16,
-                          height: 16,
+                      const SizedBox(width: 4),
+                      Text(
+                        mess['rating']!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          mess['rating']!,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 4), 
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
               Text(
                 mess['description']!,
                 style: const TextStyle(fontSize: 13, color: Colors.grey),
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8), 
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(
-                    Icons.timer_outlined,
-                    color: Colors.grey,
-                    size: 16,
-                  ),
+                  const Icon(Icons.timer_outlined,
+                      color: Colors.grey, size: 16),
                   const SizedBox(width: 4),
                   Text(
                     mess['time']!,
                     style: const TextStyle(fontSize: 13, color: Colors.grey),
                   ),
                   const SizedBox(width: 12),
-                  const Icon(
-                    Icons.delivery_dining_outlined,
-                    color: Colors.grey,
-                    size: 16,
-                  ),
+                  const Icon(Icons.delivery_dining_outlined,
+                      color: Colors.grey, size: 16),
                   const SizedBox(width: 4),
                   Text(
                     mess['delivery']!,
@@ -297,6 +325,7 @@ Widget _buildKitchenCard(Map<String, String> mess) {
     ),
   );
 }
+
 
   // --- Drawer (Sidebar) ---
   Widget _buildDrawer() {
@@ -531,7 +560,17 @@ Widget _buildKitchenCard(Map<String, String> mess) {
                                 width: 35,
                                 height: 35,
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => LikeMenu(
+                                      favoriteList: favoriteList, //favorite mess array
+                                      allMesses: messes, //your full mess array
+                                    )
+                                  )
+                                );
+                              },
                             ),
                             const SizedBox(width: 10),
                             Stack(
@@ -549,27 +588,30 @@ Widget _buildKitchenCard(Map<String, String> mess) {
                                     // Always pass an empty list of selected items as per your request.
                                     // The AddToCart screen will decide whether to display content or the empty state
                                     // based on the total price or if it fetches the true cart state internally.
-                                    final List<Map<String, dynamic>> finalSelectedItems = []; 
-                                    
+                                    final List<Map<String, dynamic>>
+                                    finalSelectedItems = [];
+
                                     // Pass the total price based on the mock state for AddToCart to use.
-                                    final double finalTotalPrice = isCartBadgeVisible 
-                                        ? _cartTotalPrice 
+                                    final double finalTotalPrice =
+                                        isCartBadgeVisible
+                                        ? _cartTotalPrice
                                         : 0.0;
 
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => AddToCart(
-                                          selectedItems: finalSelectedItems, // Always empty list
+                                          selectedItems:
+                                              finalSelectedItems, // Always empty list
                                           totalPrice: finalTotalPrice,
-                                          similarMeals: messes, 
+                                          similarMeals: messes,
                                         ),
                                       ),
                                     );
                                   },
                                 ),
                                 // Cart count bubble (only visible if data is present)
-                                if (isCartBadgeVisible) 
+                                if (isCartBadgeVisible)
                                   Positioned(
                                     right: 0,
                                     top: 0,
@@ -747,7 +789,7 @@ Widget _buildKitchenCard(Map<String, String> mess) {
               ),
               // Horizontal Scrollable List for Kitchen Cards
               SizedBox(
-                height: 250, 
+                height: 250,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -758,7 +800,10 @@ Widget _buildKitchenCard(Map<String, String> mess) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MessMenuScreen(mess: [messes[index]], allMesses: messes), // Wrap in a list
+                            builder: (context) => MessMenuScreen(
+                              mess: [messes[index]],
+                              allMesses: messes,
+                            ), // Wrap in a list
                           ),
                         );
                       },
