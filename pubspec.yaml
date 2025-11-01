@@ -12,6 +12,8 @@ dependencies:
     sdk: flutter
   fluttertoast: ^9.0.0
   cupertino_icons: ^1.0.8
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
   
 
 dev_dependencies:

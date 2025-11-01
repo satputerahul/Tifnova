@@ -1,26 +1,26 @@
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:Tifnova/screens/like_menu.dart';
 import 'package:Tifnova/screens/login_screen.dart';
 import 'package:Tifnova/screens/messMenu_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'addCart.dart';
 
 class MessListScreen extends StatefulWidget {
   const MessListScreen({super.key, required List<Map<String, String>> mess, required List<Map<String, String>> allMesses});
+
   @override
-  State<MessListScreen> createState() => _MessListScreenState();
+State<MessListScreen> createState() => _MessListScreenState();
 }
 
 class _MessListScreenState extends State<MessListScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  // ✅ STATE VARIABLES: To manage the cart badge visibility and data
-  // Set _cartItemCount to 0 to test the empty cart badge (no badge displayed).
-  int _cartItemCount = 1; // 0 for empty cart, > 0 for items
+  int _cartItemCount = 1;
   double _cartTotalPrice = 120.0;
+  String _currentAddress = 'Fetching location...';
+  String _currentLocality = 'Sadanand Colony';
 
-  // ✅ MOCK FULL CART ITEM: This variable is no longer used for passing data,
-  // but kept here as it was in your original code block.
   final List<Map<String, dynamic>> _mockFullCartItems = const [
     {
       "dishName": "Patil Tiffin Special",
@@ -30,9 +30,6 @@ class _MessListScreenState extends State<MessListScreen> {
     },
   ];
 
-  // --- Mock Data ---
-
-  // Kitchens Data (used for the 'Explore Kitchens' section)
   List<Map<String, String>> messes = [
     {
       "name": "Patil Mess",
@@ -76,7 +73,6 @@ class _MessListScreenState extends State<MessListScreen> {
     },
   ];
 
-  // Categories Data (used for the 'What's on your mind?' section)
   List<Map<String, String>> categories = [
     {"name": "Thali", "image": "assets/images/thali.png"},
     {"name": "Vegetable", "image": "assets/images/vegetable.png"},
@@ -88,18 +84,63 @@ class _MessListScreenState extends State<MessListScreen> {
 
   List<Map<String, String>> favoriteList = [];
 
-  // --- Refresh Function ---
-
-  Future<void> _handleRefresh() async {
-    // Simulate a network delay or data fetching time
-    await Future.delayed(const Duration(milliseconds: 1000));
-    // In a real app, you would call setState() here to update your data:
-    // setState(() { messes = fetchNewMesses(); });
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
   }
 
-  // --- Helper Widgets ---
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() {
+        _currentAddress = 'Location services are disabled.';
+      });
+      return;
+    }
 
-  // Helper widget to load custom Image assets
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          _currentAddress = 'Location permissions are denied';
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      setState(() {
+        _currentAddress = 'Location permissions are permanently denied.';
+      });
+      return;
+    }
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude, position.longitude);
+
+      if (placemarks.isNotEmpty) {
+        Placemark placemark = placemarks[0];
+        setState(() {
+          _currentAddress = placemark.street ?? 'Unknown street';
+          _currentLocality = placemark.locality ?? 'Unknown locality';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _currentAddress = 'Could not fetch location: $e';
+      });
+    }
+  }
+
+  Future<void> _handleRefresh() async {
+    await Future.delayed(const Duration(milliseconds: 1000));
+  }
+
   Widget _customAssetImage(
     String assetPath, {
     Color? color,
@@ -108,7 +149,6 @@ class _MessListScreenState extends State<MessListScreen> {
     BoxFit fit = BoxFit.contain,
     Alignment alignment = Alignment.center,
   }) {
-    // NOTE: Ensure these asset paths exist in your pubspec.yaml and project structure.
     return Image.asset(
       assetPath,
       width: width,
@@ -119,7 +159,6 @@ class _MessListScreenState extends State<MessListScreen> {
     );
   }
 
-  // Widget to build a single Category circle item
   Widget _buildCategoryItem(Map<String, String> category) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -144,7 +183,7 @@ class _MessListScreenState extends State<MessListScreen> {
               category['image']!,
               width: 70,
               height: 70,
-              fit: BoxFit.cover, // Ensures category image fills circle
+              fit: BoxFit.cover,
             ),
           ),
         ),
@@ -158,196 +197,186 @@ class _MessListScreenState extends State<MessListScreen> {
   }
 
   Widget _buildKitchenCard(Map<String, String> mess) {
-  return Container(
-    width: 250,
-    margin: const EdgeInsets.only(right: 15),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(10),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.2),
-          spreadRadius: 1,
-          blurRadius: 3,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            // ✅ Image of Mess (tappable area to open next page)
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MessMenuScreen(
-                      mess: [mess],
-                      allMesses: messes,
-                    ),
-                  ),
-                );
-              },
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(10),
-                ),
-                child: _customAssetImage(
-                  mess['image']!,
-                  height: 140,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-
-            // ✅ Favorite (heart) icon as image
-            Positioned(
-              top: 10,
-              right: 10,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (favoriteList.contains(mess)) {
-                      favoriteList.remove(mess);
-                      Fluttertoast.showToast(
-                        msg: "${mess['name']} removed from Likes",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.black54,
-                        textColor: Colors.white,
-                      );
-                    } else {
-                      favoriteList.add(mess);
-                      Fluttertoast.showToast(
-                        msg: "${mess['name']} added to Likes",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.black54,
-                        textColor: Colors.white,
-                      );
-                    }
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Image.asset(
-                    favoriteList.contains(mess)
-                        ? 'assets/icons/unlike.png'
-                        : 'assets/icons/like.png',
-                    width: 28,
-                    height: 28,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        // ✅ Text content section
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      width: 250,
+      margin: const EdgeInsets.only(right: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    mess['name']!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MessMenuScreen(
+                        mess: [mess],
+                        allMesses: messes,
+                      ),
+                    ),
+                  );
+                },
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(10),
+                  ),
+                  child: _customAssetImage(
+                    mess['image']!,
+                    height: 140,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (favoriteList.contains(mess)) {
+                        favoriteList.remove(mess);
+                        Fluttertoast.showToast(
+                          msg: "${mess['name']} removed from Likes",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.black54,
+                          textColor: Colors.white,
+                        );
+                      } else {
+                        favoriteList.add(mess);
+                        Fluttertoast.showToast(
+                          msg: "${mess['name']} added to Likes",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.black54,
+                          textColor: Colors.white,
+                        );
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Image.asset(
+                      favoriteList.contains(mess)
+                          ? 'assets/icons/unlike.png'
+                          : 'assets/icons/like.png',
+                      width: 28,
+                      height: 28,
                     ),
                   ),
-                  Row(
-                    children: [
-                      _customAssetImage(
-                        'assets/icons/star.png',
-                        color: const Color(0xFFFFC107),
-                        width: 16,
-                        height: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        mess['rating']!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                mess['description']!,
-                style: const TextStyle(fontSize: 13, color: Colors.grey),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.timer_outlined,
-                      color: Colors.grey, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    mess['time']!,
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
-                  ),
-                  const SizedBox(width: 12),
-                  const Icon(Icons.delivery_dining_outlined,
-                      color: Colors.grey, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    mess['delivery']!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: mess['delivery'] == 'Free'
-                          ? Colors.green
-                          : Colors.grey,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
-        ),
-      ],
-    ),
-  );
-}
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      mess['name']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        _customAssetImage(
+                          'assets/icons/star.png',
+                          color: const Color(0xFFFFC107),
+                          width: 16,
+                          height: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          mess['rating']!,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  mess['description']!,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.timer_outlined,
+                        color: Colors.grey, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      mess['time']!,
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                    const SizedBox(width: 12),
+                    const Icon(Icons.delivery_dining_outlined,
+                        color: Colors.grey, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      mess['delivery']!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: mess['delivery'] == 'Free'
+                            ? Colors.green
+                            : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-
-  // --- Drawer (Sidebar) ---
   Widget _buildDrawer() {
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.75,
       child: Column(
         children: [
-          // Purple Header (Top Section)
           Container(
             color: const Color(0xFF870474),
             padding: const EdgeInsets.fromLTRB(16, 40, 16, 20),
             width: double.infinity,
             child: Row(
               children: [
-                // Left side image (Mascot or logo)
                 Image.asset(
-                  'assets/images/tifnova.png', // Replace with your actual asset
+                  'assets/images/tifnova.png',
                   height: MediaQuery.of(context).size.height * 0.15,
                   width: MediaQuery.of(context).size.width * 0.25,
                 ),
                 const SizedBox(width: 3),
-                // Greeting and username
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -372,7 +401,6 @@ class _MessListScreenState extends State<MessListScreen> {
               ],
             ),
           ),
-          // Drawer menu items
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
@@ -430,7 +458,6 @@ class _MessListScreenState extends State<MessListScreen> {
               ],
             ),
           ),
-          // Logout button at bottom
           Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: Column(
@@ -444,18 +471,15 @@ class _MessListScreenState extends State<MessListScreen> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-
                     Fluttertoast.showToast(
                       msg: "Logging out...",
                       toastLength: Toast.LENGTH_SHORT,
                       gravity: ToastGravity.BOTTOM,
                       timeInSecForIosWeb: 1,
-                      backgroundColor:
-                          Colors.black54, // Customizable background
+                      backgroundColor: Colors.black54,
                       textColor: Colors.white,
                       fontSize: 16.0,
                     );
-
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -472,27 +496,20 @@ class _MessListScreenState extends State<MessListScreen> {
     );
   }
 
-  // --- Main Screen Build ---
-
   @override
   Widget build(BuildContext context) {
-    // Determine the number to show in the cart badge
     final bool isCartBadgeVisible = _cartItemCount > 0;
-
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(),
-      // 1. Wrap the entire body in RefreshIndicator
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
-        color: const Color(0xFF870474), // Set refresh color to purple
+        color: const Color(0xFF870474),
         child: SingleChildScrollView(
-          physics:
-              const AlwaysScrollableScrollPhysics(), // Ensures refresh works even if content doesn't fill screen
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              // --- Header Section (Profile, Location, Cart, Search) ---
               Container(
                 padding: EdgeInsets.only(
                   top: MediaQuery.of(context).padding.top + 16,
@@ -506,7 +523,6 @@ class _MessListScreenState extends State<MessListScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        // Left side: profile + location
                         Row(
                           children: [
                             GestureDetector(
@@ -530,17 +546,17 @@ class _MessListScreenState extends State<MessListScreen> {
                             const SizedBox(width: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Text(
-                                  'Sadanand Colony',
-                                  style: TextStyle(
+                                  _currentLocality,
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
                                 ),
                                 Text(
-                                  'Dadar',
-                                  style: TextStyle(
+                                  _currentAddress,
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey,
                                   ),
@@ -549,7 +565,6 @@ class _MessListScreenState extends State<MessListScreen> {
                             ),
                           ],
                         ),
-                        // Right side: icons
                         Row(
                           children: [
                             IconButton(
@@ -565,10 +580,10 @@ class _MessListScreenState extends State<MessListScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => LikeMenu(
-                                      favoriteList: favoriteList, //favorite mess array
-                                      allMesses: messes, //your full mess array
-                                    )
-                                  )
+                                      favoriteList: favoriteList,
+                                      allMesses: messes,
+                                    ),
+                                  ),
                                 );
                               },
                             ),
@@ -583,26 +598,18 @@ class _MessListScreenState extends State<MessListScreen> {
                                     width: 35,
                                     height: 35,
                                   ),
-                                  // ✅ UPDATED CART NAVIGATION LOGIC
                                   onPressed: () {
-                                    // Always pass an empty list of selected items as per your request.
-                                    // The AddToCart screen will decide whether to display content or the empty state
-                                    // based on the total price or if it fetches the true cart state internally.
                                     final List<Map<String, dynamic>>
-                                    finalSelectedItems = [];
-
-                                    // Pass the total price based on the mock state for AddToCart to use.
+                                        finalSelectedItems = [];
                                     final double finalTotalPrice =
                                         isCartBadgeVisible
-                                        ? _cartTotalPrice
-                                        : 0.0;
-
+                                            ? _cartTotalPrice
+                                            : 0.0;
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => AddToCart(
-                                          selectedItems:
-                                              finalSelectedItems, // Always empty list
+                                          selectedItems: finalSelectedItems,
                                           totalPrice: finalTotalPrice,
                                           similarMeals: messes,
                                         ),
@@ -610,7 +617,6 @@ class _MessListScreenState extends State<MessListScreen> {
                                     );
                                   },
                                 ),
-                                // Cart count bubble (only visible if data is present)
                                 if (isCartBadgeVisible)
                                   Positioned(
                                     right: 0,
@@ -626,7 +632,7 @@ class _MessListScreenState extends State<MessListScreen> {
                                         minHeight: 18,
                                       ),
                                       child: Text(
-                                        '$_cartItemCount', // Display the state count
+                                        '$_cartItemCount',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 11,
@@ -642,7 +648,6 @@ class _MessListScreenState extends State<MessListScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Search Bar
                     TextFormField(
                       decoration: InputDecoration(
                         prefixIcon: Padding(
@@ -684,18 +689,17 @@ class _MessListScreenState extends State<MessListScreen> {
                   ],
                 ),
               ),
-              // --- Gradient Banner Section ---
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Container(
                   width: double.infinity,
-                  height: 130, // Banner height
+                  height: 130,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     gradient: const LinearGradient(
                       colors: [
-                        Color(0xFF870474), // Left color
-                        Color(0xFF421B86), // Right color
+                        Color(0xFF870474),
+                        Color(0xFF421B86),
                       ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
@@ -703,7 +707,6 @@ class _MessListScreenState extends State<MessListScreen> {
                   ),
                   child: Stack(
                     children: [
-                      // Left side - Text
                       Positioned.fill(
                         left: 20,
                         child: Column(
@@ -728,7 +731,6 @@ class _MessListScreenState extends State<MessListScreen> {
                           ],
                         ),
                       ),
-                      // Right side - Illustration
                       Positioned(
                         right: -30,
                         top: (130 - 160) / 2,
@@ -737,7 +739,7 @@ class _MessListScreenState extends State<MessListScreen> {
                           height: 160,
                           child: Center(
                             child: Image.asset(
-                              'assets/images/delivery_boy.png', // your asset path
+                              'assets/images/delivery_boy.png',
                               width: 155,
                               fit: BoxFit.contain,
                             ),
@@ -748,7 +750,6 @@ class _MessListScreenState extends State<MessListScreen> {
                   ),
                 ),
               ),
-              // --- Categories Section (What's on your mind?) ---
               const Padding(
                 padding: EdgeInsets.only(left: 16.0, top: 8.0, bottom: 12.0),
                 child: Text(
@@ -756,21 +757,20 @@ class _MessListScreenState extends State<MessListScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-              // Scrollable Grid for Categories
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SizedBox(
-                  height: 105, // Height to fit 1 row of category items
+                  height: 105,
                   child: GridView.builder(
-                    scrollDirection: Axis.horizontal, // Horizontal scroll
+                    scrollDirection: Axis.horizontal,
                     padding: EdgeInsets.zero,
                     itemCount: categories.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 1, // One row
-                          mainAxisSpacing: 16.0,
-                          childAspectRatio: 1.25, // Adjust item width
-                        ),
+                      crossAxisCount: 1,
+                      mainAxisSpacing: 16.0,
+                      childAspectRatio: 1.25,
+                    ),
                     itemBuilder: (context, index) {
                       return _buildCategoryItem(categories[index]);
                     },
@@ -778,8 +778,6 @@ class _MessListScreenState extends State<MessListScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // --- Kitchens Section (Explore Kitchens) ---
               const Padding(
                 padding: EdgeInsets.only(left: 16.0, top: 8.0, bottom: 12.0),
                 child: Text(
@@ -787,7 +785,6 @@ class _MessListScreenState extends State<MessListScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-              // Horizontal Scrollable List for Kitchen Cards
               SizedBox(
                 height: 250,
                 child: ListView.builder(
@@ -803,7 +800,7 @@ class _MessListScreenState extends State<MessListScreen> {
                             builder: (context) => MessMenuScreen(
                               mess: [messes[index]],
                               allMesses: messes,
-                            ), // Wrap in a list
+                            ),
                           ),
                         );
                       },
@@ -813,8 +810,6 @@ class _MessListScreenState extends State<MessListScreen> {
                 ),
               ),
               const SizedBox(height: 25),
-
-              // --- Explore by Dishes Button ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SizedBox(
@@ -822,11 +817,10 @@ class _MessListScreenState extends State<MessListScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Action for Explore by Dishes
                       print("Explore by Dishes tapped!");
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF870474), // Purple color
+                      backgroundColor: const Color(0xFF870474),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -843,8 +837,7 @@ class _MessListScreenState extends State<MessListScreen> {
                   ),
                 ),
               ),
-
-              const SizedBox(height: 30), // Extra space at the bottom
+              const SizedBox(height: 30),
             ],
           ),
         ),
