@@ -5,13 +5,18 @@ import 'package:geocoding/geocoding.dart';
 import 'package:Tifnova/screens/like_menu.dart';
 import 'package:Tifnova/screens/login_screen.dart';
 import 'package:Tifnova/screens/messMenu_screen.dart';
+import 'package:Tifnova/screens/liveMap_screen.dart';
 import 'addCart.dart';
 
 class MessListScreen extends StatefulWidget {
-  const MessListScreen({super.key, required List<Map<String, String>> mess, required List<Map<String, String>> allMesses});
+  const MessListScreen({
+    super.key,
+    required List<Map<String, String>> mess,
+    required List<Map<String, String>> allMesses,
+  });
 
   @override
-State<MessListScreen> createState() => _MessListScreenState();
+  State<MessListScreen> createState() => _MessListScreenState();
 }
 
 class _MessListScreenState extends State<MessListScreen> {
@@ -20,6 +25,8 @@ class _MessListScreenState extends State<MessListScreen> {
   double _cartTotalPrice = 120.0;
   String _currentAddress = 'Fetching location...';
   String _currentLocality = 'Sadanand Colony';
+  double? _currentLatitude;
+  double? _currentLongitude;
 
   final List<Map<String, dynamic>> _mockFullCartItems = const [
     {
@@ -119,13 +126,18 @@ class _MessListScreenState extends State<MessListScreen> {
 
     try {
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.high,
+      );
       List<Placemark> placemarks = await placemarkFromCoordinates(
-          position.latitude, position.longitude);
+        position.latitude,
+        position.longitude,
+      );
 
       if (placemarks.isNotEmpty) {
         Placemark placemark = placemarks[0];
         setState(() {
+          _currentLatitude = position.latitude;
+          _currentLongitude = position.longitude;
           _currentAddress = placemark.street ?? 'Unknown street';
           _currentLocality = placemark.locality ?? 'Unknown locality';
         });
@@ -330,16 +342,22 @@ class _MessListScreenState extends State<MessListScreen> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.timer_outlined,
-                        color: Colors.grey, size: 16),
+                    const Icon(
+                      Icons.timer_outlined,
+                      color: Colors.grey,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       mess['time']!,
                       style: const TextStyle(fontSize: 13, color: Colors.grey),
                     ),
                     const SizedBox(width: 12),
-                    const Icon(Icons.delivery_dining_outlined,
-                        color: Colors.grey, size: 16),
+                    const Icon(
+                      Icons.delivery_dining_outlined,
+                      color: Colors.grey,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       mess['delivery']!,
@@ -538,10 +556,32 @@ class _MessListScreenState extends State<MessListScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            _customAssetImage(
-                              'assets/icons/location.png',
-                              width: 20,
-                              height: 20,
+                            GestureDetector(
+                              onTap: () {
+                                if (_currentLatitude != null &&
+                                    _currentLongitude != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LiveMapScreen(
+                                        latitude: _currentLatitude!,
+                                        longitude: _currentLongitude!,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  Fluttertoast.showToast(
+                                    msg: "Location not available. Please try again.",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                  );
+                                }
+                              },
+                              child: _customAssetImage(
+                                'assets/icons/location.png',
+                                width: 20,
+                                height: 20,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             Column(
@@ -697,10 +737,7 @@ class _MessListScreenState extends State<MessListScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF870474),
-                        Color(0xFF421B86),
-                      ],
+                      colors: [Color(0xFF870474), Color(0xFF421B86)],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
@@ -765,8 +802,7 @@ class _MessListScreenState extends State<MessListScreen> {
                     scrollDirection: Axis.horizontal,
                     padding: EdgeInsets.zero,
                     itemCount: categories.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 1,
                       mainAxisSpacing: 16.0,
                       childAspectRatio: 1.25,
