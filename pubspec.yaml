@@ -1,0 +1,40 @@
+name: Tifnova
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.0-278.1.beta
+
+dependencies:
+  flutter:
+    sdk: flutter
+  fluttertoast: ^9.0.0
+  cupertino_icons: ^1.0.8
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  google_maps_flutter: ^2.13.1
+  image_picker: ^1.2.0
+  firebase_auth: ^6.1.2
+  firebase_core: ^4.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/gifs/
+    - assets/icons/
+
+# App icon configuration
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.jpg"
