@@ -16,9 +16,7 @@ class MessMenuScreen extends StatefulWidget {
 }
 
 class _MessMenuScreenState extends State<MessMenuScreen> {
-  // We no longer track totalQuantity as a sum, 
-  // but we will calculate the number of distinct items.
-  int _distinctItemCount = 0; 
+  int _distinctItemCount = 0;
   double totalPrice = 0.0;
 
   List<Map<String, dynamic>> menuList = [
@@ -104,68 +102,68 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
     },
   ];
 
-  double _parsePrice(String priceString) {
-    String numericPrice = priceString.replaceAll(RegExp(r'[^\d.]'), '');
-    return double.tryParse(numericPrice) ?? 0.0;
+  double _parsePrice(String p) {
+    return double.tryParse(p.replaceAll(RegExp(r'[^\d]'), '')) ?? 0.0;
   }
 
-  // New function to calculate total price and distinct item count
   void _recalculateCart() {
-    double newTotalPrice = 0.0;
-    int newDistinctItemCount = 0;
+    double newTotal = 0.0;
+    int count = 0;
 
     for (var item in menuList) {
-      final quantity = item['quantity'] as int;
-      if (quantity > 0) {
-        newDistinctItemCount++;
-        final itemPrice = _parsePrice(item['price'] as String);
-        newTotalPrice += itemPrice * quantity;
+      int qty = item['quantity'];
+      if (qty > 0) {
+        count++;
+        newTotal += _parsePrice(item['price']) * qty;
       }
     }
 
     setState(() {
-      totalPrice = newTotalPrice;
-      _distinctItemCount = newDistinctItemCount;
+      totalPrice = newTotal;
+      _distinctItemCount = count;
     });
   }
 
-  void _updateCart(int index, bool isIncrement) {
-    setState(() {
-      final item = menuList[index];
-      int currentQuantity = item['quantity'] as int;
+  void _updateCart(int index, bool increment) {
+    final item = menuList[index];
+    int q = item['quantity'];
 
-      // 1. Update the item's quantity locally
-      if (isIncrement) {
-        item['quantity'] = currentQuantity + 1;
-      } else if (currentQuantity > 0) {
-        item['quantity'] = currentQuantity - 1;
-      }
+    if (increment) {
+      item['quantity'] = q + 1;
+    } else if (q > 0) {
+      item['quantity'] = q - 1;
+    }
 
-      // 2. Recalculate the entire cart summary
-      _recalculateCart();
-    });
+    _recalculateCart();
   }
 
+  // ------------------------------------
+  //     CART BUTTON  (fixed version)
+  // ------------------------------------
   Widget _buildCartButton() {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: InkWell(
-        onTap: () {
-          List<Map<String, dynamic>> selectedItems = menuList
-              .where((item) => item['quantity'] > 0)
-              .toList();
+        onTap: () async {
+          // only items with quantity > 0
+          List<Map<String, dynamic>> selectedItems =
+              menuList.where((e) => e['quantity'] > 0).toList();
 
-          Navigator.push(
+          final updatedCart = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => AddToCart(
                 selectedItems: selectedItems,
                 totalPrice: totalPrice,
-                // ✅ PASS THE LIST RECEIVED BY THIS SCREEN
                 similarMeals: widget.allMesses,
               ),
             ),
           );
+
+          // 🔥 VERY IMPORTANT — pass updated cart back to Home
+          if (updatedCart is List<Map<String, dynamic>>) {
+            Navigator.pop(context, updatedCart);
+          }
         },
         child: Container(
           height: 50,
@@ -177,40 +175,31 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 10.0),
-                child: Container(
-                  width: 25,
-                  height: 25,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                  child: Center(
-                    child: Text(
-                      // Use the distinct item count (1, 2, 3...)
-                      '$_distinctItemCount', 
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                    ),
+                padding: const EdgeInsets.only(left: 10),
+                child: CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.transparent,
+                  child: Text(
+                    '$_distinctItemCount',
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 ),
               ),
               const Text(
                 'View your cart',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 10.0),
-                child: Text(
-                  '₹ ${totalPrice.toStringAsFixed(0)}',
-                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                    fontWeight: FontWeight.w500),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Text(
+                  "₹ ${totalPrice.toStringAsFixed(0)}",
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16),
                 ),
               ),
             ],
@@ -220,32 +209,45 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
     );
   }
 
+  // -------------------------
+  //   MAIN UI
+  // -------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       appBar: AppBar(
         backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: Image.asset('assets/icons/back.png', width: 24, height: 24),
-          onPressed: () => Navigator.pop(context),
+          icon: Image.asset('assets/icons/back.png', width: 25),
+          onPressed: () {
+            // back करताना selected cart परत पाठवणे
+            final selectedItems =
+                menuList.where((e) => e['quantity'] > 0).toList();
+
+            Navigator.pop(context, selectedItems);
+          },
         ),
         actions: [
           IconButton(
-            icon: Image.asset('assets/icons/filter.png', width: 24, height: 24),
+            icon: Image.asset('assets/icons/filter.png', width: 22),
             onPressed: () {},
           ),
           const SizedBox(width: 8),
         ],
-        elevation: 0,
       ),
-      // Use the distinct item count to decide visibility
-      bottomNavigationBar: _distinctItemCount > 0 ? _buildCartButton() : null,
+
+      bottomNavigationBar:
+          _distinctItemCount > 0 ? _buildCartButton() : null,
+
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // HEADER
             Center(
               child: Column(
                 children: [
@@ -255,7 +257,8 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: const DecorationImage(
-                        image: AssetImage('assets/images/thaliSadananad.png'),
+                        image:
+                            AssetImage('assets/images/thaliSadananad.png'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -264,39 +267,38 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      Icon(Icons.star, color: Colors.amber, size: 16),
+                      Icon(Icons.star,
+                          size: 16, color: Colors.amber),
                       SizedBox(width: 4),
                       Text(
-                        '4.7',
+                        "4.7",
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Sadanand Uphargruha',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Sadanand Uphargruha",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(
-                    'Pure Veg',
-                    style: TextStyle(
-                      color: Colors.green.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  Text("Pure Veg",
+                      style: TextStyle(
+                        color: Colors.green.shade600,
+                        fontWeight: FontWeight.w600,
+                      )),
                 ],
               ),
             ),
+
+            const SizedBox(height: 20),
             const Text(
               "Today's Menu",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+
+            // MENU LIST
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -309,7 +311,7 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                 );
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
           ],
         ),
       ),
@@ -317,7 +319,10 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
   }
 }
 
-// MENU ITEM CARD (Updated quantity display logic for better contrast)
+// --------------------------------------------------------------------
+//                             MENU CARD
+// --------------------------------------------------------------------
+
 class MenuItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final int index;
@@ -332,126 +337,113 @@ class MenuItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int currentQuantity = item['quantity'] as int;
-    final primaryPurple = const Color(0xFF870474);
+    int qty = item['quantity'];
+    final Color purple = const Color(0xFF870474);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10.0),
-          border: Border.all(color: const Color(0xFFE0E0E0), width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border:
+            Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              item["image"],
+              width: 70,
+              height: 70,
+              fit: BoxFit.cover,
             ),
-          ],
-        ),
-        padding: const EdgeInsets.all(10.0),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Image.asset(
-                item["image"],
-                width: 70,
-                height: 70,
-                fit: BoxFit.cover,
-              ),
+          ),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item["dishName"],
+                  style:
+                      const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item["price"],
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+
+          Column(
+            children: [
+              Row(
                 children: [
-                  Text(
-                    item["dishName"],
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item["price"],
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
+                  const Icon(Icons.star,
+                      size: 14, color: Colors.amber),
+                  const SizedBox(width: 4),
+                  Text("${item['rating']}",
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500)),
                 ],
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
+              const SizedBox(height: 8),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                    border:
+                        Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(18)),
+                child: Row(
                   children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item["rating"]}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                    InkWell(
+                      onTap: qty > 0
+                          ? () => onQuantityChanged(index, false)
+                          : null,
+                      child: Icon(Icons.remove,
+                          size: 18,
+                          color: qty > 0
+                              ? purple
+                              : Colors.grey.shade400),
+                    ),
+                    const SizedBox(width: 8),
+                    Text("$qty",
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () => onQuantityChanged(index, true),
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                            color: purple, shape: BoxShape.circle),
+                        child: const Icon(Icons.add,
+                            size: 14, color: Colors.white),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      InkWell(
-                        onTap: currentQuantity > 0
-                            ? () => onQuantityChanged(index, false)
-                            : null,
-                        child: Padding(
-                          padding: const EdgeInsets.all(3),
-                          child: Icon(
-                            Icons.remove,
-                            size: 16,
-                            // Change color based on availability
-                            color: currentQuantity > 0 ? primaryPurple : Colors.grey.shade400,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                        child: Text(
-                          '$currentQuantity',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () => onQuantityChanged(index, true),
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: primaryPurple,
-                          ),
-                          child: const Icon(
-                            Icons.add,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          )
+        ],
       ),
     );
   }

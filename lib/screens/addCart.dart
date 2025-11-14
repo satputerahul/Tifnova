@@ -60,7 +60,7 @@ class _AddToCartState extends State<AddToCart> {
             ElevatedButton(
               onPressed: () {
                 // Navigate back to the previous screen (MessMenuScreen) or the home screen
-                Navigator.pop(context);
+                Navigator.pop(context, []);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryPurple,
@@ -86,8 +86,8 @@ class _AddToCartState extends State<AddToCart> {
 
   // --- Cart Item Widget ---
   Widget _buildCartItem(Map<String, dynamic> item) {
-    final price = _parsePrice(item['price'].toString());
-    final quantity = item['quantity'] as int;
+    final double price = _parsePrice(item['price'].toString());
+    int quantity = item['quantity'] as int;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -103,11 +103,13 @@ class _AddToCartState extends State<AddToCart> {
               fit: BoxFit.cover,
             ),
           ),
+
           const SizedBox(width: 12),
+
+          // --- ITEM NAME + PRICE + QTY ---
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   item["dishName"],
@@ -120,7 +122,6 @@ class _AddToCartState extends State<AddToCart> {
                   "₹ ${price.toStringAsFixed(0)}",
                   style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
-                // Display quantity like in the screenshot
                 Text(
                   "Qty: $quantity",
                   style: const TextStyle(color: Colors.grey, fontSize: 14),
@@ -128,7 +129,8 @@ class _AddToCartState extends State<AddToCart> {
               ],
             ),
           ),
-          // Quantity Selector from the screenshot
+
+          // --- QUANTITY SELECTOR ---
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
@@ -137,8 +139,23 @@ class _AddToCartState extends State<AddToCart> {
             ),
             child: Row(
               children: [
+                // ----------- DECREASE BUTTON -----------
                 InkWell(
-                  onTap: () {}, // Handle decrease quantity
+                  onTap: () {
+                    setState(() {
+                      if (item['quantity'] > 1) {
+                        item['quantity']--;
+                      } else {
+                        // If quantity becomes 0 → remove item
+                        widget.selectedItems.remove(item);
+                      }
+                    });
+
+                    // If entire cart is empty → Pop with empty list
+                    if (widget.selectedItems.isEmpty) {
+                      Navigator.pop(context, widget.selectedItems);
+                    }
+                  },
                   child: const Text(
                     '-',
                     style: TextStyle(
@@ -148,18 +165,25 @@ class _AddToCartState extends State<AddToCart> {
                     ),
                   ),
                 ),
+
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
-                    '$quantity',
+                    '${item['quantity']}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
                 ),
+
+                // ----------- INCREASE BUTTON -----------
                 InkWell(
-                  onTap: () {}, // Handle increase quantity
+                  onTap: () {
+                    setState(() {
+                      item['quantity']++;
+                    });
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
@@ -172,9 +196,19 @@ class _AddToCartState extends State<AddToCart> {
               ],
             ),
           ),
+
           const SizedBox(width: 12),
+
+          // --- DELETE ICON ---
           InkWell(
-            onTap: () {}, // Handle item deletion
+            onTap: () {
+              setState(() {
+                widget.selectedItems.remove(item);
+              });
+
+              // Return updated list to HomeScreen
+              Navigator.pop(context, widget.selectedItems);
+            },
             child: const Icon(Icons.delete_outline, color: Colors.grey),
           ),
         ],
@@ -185,98 +219,102 @@ class _AddToCartState extends State<AddToCart> {
   // --- Similar Meal Card Widget ---
   // (Keep _buildSimilarMealCard as is)
   Widget _buildSimilarMealCard(Map<String, String> mess) {
-  return Container(
-    width: 180,
-    margin: const EdgeInsets.only(right: 12),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.1),
-          blurRadius: 6,
-          spreadRadius: 2,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          child: Image.asset(
-            mess['image']!,
-            height: 120,
-            width: double.infinity,
-            fit: BoxFit.cover,
+    return Container(
+      width: 180,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 6,
+            spreadRadius: 2,
+            offset: const Offset(0, 3),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      mess['name']!,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Image.asset(
+              mess['image']!,
+              height: 120,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        mess['name']!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.star, color: Colors.amber, size: 14),
+                    Text(
+                      mess['rating']!,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.star, color: Colors.amber, size: 14),
-                  Text(
-                    mess['rating']!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  mess['description']!,
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, color: Colors.grey, size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      mess['time']!,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                mess['description']!,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  const Icon(Icons.access_time, color: Colors.grey, size: 12),
-                  const SizedBox(width: 4),
-                  Text(
-                    mess['time']!,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  const Text(" • ", style: TextStyle(color: Colors.grey)),
-                  const Icon(Icons.delivery_dining, color: Colors.grey, size: 12),
-                  const SizedBox(width: 4),
-                  Text(
-                    mess['delivery']!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: mess['delivery'] == 'Free'
-                            ? Colors.green : Colors.grey,
+                    const Text(" • ", style: TextStyle(color: Colors.grey)),
+                    const Icon(
+                      Icons.delivery_dining,
+                      color: Colors.grey,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      mess['delivery']!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: mess['delivery'] == 'Free'
+                            ? Colors.green
+                            : Colors.grey,
                       ),
-                  ),
-                ],
-              ),
-            ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
+        ],
+      ),
+    );
+  }
 
   // --- Main Build Method ---
   @override
@@ -289,7 +327,7 @@ class _AddToCartState extends State<AddToCart> {
       appBar: AppBar(
         leading: IconButton(
           icon: Image.asset('assets/icons/back.png', width: 30, height: 30),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, widget.selectedItems),
         ),
         title: const Text(
           "Cart",

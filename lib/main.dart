@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart'; // ही फाइल Firebase console मधून auto तयार होते
-import 'package:Tifnova/screens/otp_screen.dart';
+import 'firebase_options.dart';
 import 'package:Tifnova/screens/signup_screen.dart';
 import 'package:Tifnova/screens/login_screen.dart';
 import 'package:Tifnova/screens/SplashScreen.dart';
