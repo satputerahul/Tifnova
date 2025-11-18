@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "844850347899",
+    "project_id": "tifnova",
+    "storage_bucket": "tifnova.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:844850347899:android:fa99f8c43d1a62046247de",
+        "android_client_info": {
+          "package_name": "com.example.Tifnova"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDE4MXBjx0KpJWU03MTzBwsIimzD8FY5Ic"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

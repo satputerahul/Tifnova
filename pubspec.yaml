@@ -1,0 +1,49 @@
+name: Tifnova
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
+  fluttertoast: ^9.0.0
+  cupertino_icons: ^1.0.8
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  google_maps_flutter: ^2.13.1
+  image_picker: ^1.2.0
+  firebase_auth: ^6.1.2
+  firebase_core: ^4.2.1
+  share_plus: ^12.0.1
+  intl: ^0.20.2
+  url_launcher: ^6.3.2
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/images/
+    - assets/gifs/
+    - assets/icons/
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.jpg"
