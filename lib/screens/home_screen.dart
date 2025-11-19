@@ -865,6 +865,7 @@ class _MessListScreenState extends State<MessListScreen>
                                         ),
                                       ),
                                     );
+                                    print("RETURNED CART ITEMS: $updatedCart");
                                     if (updatedCart is List) {
                                       setState(() {
                                         cartItems =
@@ -1050,16 +1051,28 @@ class _MessListScreenState extends State<MessListScreen>
                   itemCount: messes.length,
                   itemBuilder: (context, index) {
                     return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final updatedMenu = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MessMenuScreen(
+                            builder: (_) => MessMenuScreen(
                               mess: [messes[index]],
                               allMesses: messes,
                             ),
                           ),
                         );
+
+                        if (updatedMenu is List) {
+                          setState(() {
+                            cartItems = updatedMenu
+                                .where((e) => e['quantity'] > 0)
+                                .map<Map<String, dynamic>>(
+                                    (e) => Map<String, dynamic>.from(e))
+                                .toList();
+
+                            _cartItemCount = cartItems.length;
+                          });
+                        }
                       },
                       child: _buildKitchenCard(messes[index], messes),
                     );

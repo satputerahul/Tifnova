@@ -2,27 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:Tifnova/screens/addCart.dart';
 import 'package:Tifnova/l10n/app_localizations.dart';
 
-// class MessMenuScreen extends StatefulWidget {
-//   final List<Map<String, String>> mess;
-//   final List<Map<String, String>> allMesses;
-
-//   const MessMenuScreen({
-//     super.key,
-//     required this.mess,
-//     required this.allMesses,
-//   });
-
-//   @override
-//   State<MessMenuScreen> createState() => _MessMenuScreenState();
-// }
-
 class MessMenuScreen extends StatefulWidget {
   final List<Map<String, String>> mess;
   final List<Map<String, String>> allMesses;
 
   const MessMenuScreen({
     super.key,
-    this.mess = const [],       // <-- Default value added
+    this.mess = const [],
     required this.allMesses,
   });
 
@@ -30,14 +16,12 @@ class MessMenuScreen extends StatefulWidget {
   State<MessMenuScreen> createState() => _MessMenuScreenState();
 }
 
-
 class _MessMenuScreenState extends State<MessMenuScreen> {
   int _distinctItemCount = 0;
   double totalPrice = 0.0;
 
   List<Map<String, dynamic>> menuList = [];
 
-  // 🔥 LOCALIZED MENU LIST
   List<Map<String, dynamic>> getLocalizedMenu(AppLocalizations l10n) {
     return [
       {
@@ -126,8 +110,6 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
   @override
   void initState() {
     super.initState();
-
-    // context available झाल्यावर menu तयार करतो
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         menuList = getLocalizedMenu(AppLocalizations.of(context)!);
@@ -173,16 +155,16 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
     });
   }
 
-  // 📌 BOTTOM CART BUTTON
   Widget _buildCartButton(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: InkWell(
-        onTap: () {
+        onTap: () async {
           final selectedItems =
               menuList.where((e) => e['quantity'] > 0).toList();
+          print("MENU LIST BEFORE OPENING CART: $menuList");
 
-          Navigator.push(
+          final updatedCart = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => AddToCart(
@@ -192,6 +174,31 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
               ),
             ),
           );
+
+          if (updatedCart is List) {
+            setState(() {
+              // Step 1: Reset all quantities to 0
+              for (var item in menuList) {
+                item['quantity'] = 0;
+              }
+
+              // Step 2: Apply updated cart quantities
+              for (var cartItem in updatedCart) {
+                // Safe matching without null
+                var match = menuList.firstWhere(
+                  (e) => e['dishName'] == cartItem['dishName'],
+                  orElse: () => <String, dynamic>{}, // SAFE empty map
+                );
+
+                if (match.isNotEmpty) {
+                  match['quantity'] = cartItem['quantity'];
+                }
+              }
+
+              // Recalculate totals
+              _recalculateCart();
+            });
+          }
         },
         child: Container(
           height: 50,
@@ -202,7 +209,6 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // count bubble
               Padding(
                 padding: const EdgeInsets.only(left: 10),
                 child: Container(
@@ -241,12 +247,170 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
     );
   }
 
+  // 🔥 NEW: Similar Meals Card Builder
+  Widget _buildSimilarMealCard(
+      Map<String, String> mess, AppLocalizations l10n) {
+    // Current mess ला skip करतो
+    final currentMessName =
+        widget.mess.isNotEmpty ? widget.mess.first['name'] : '';
+    if (mess['name'] == currentMessName) {
+      return const SizedBox.shrink();
+    }
+
+    return InkWell(
+      onTap: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MessMenuScreen(
+              mess: [mess],
+              allMesses: widget.allMesses,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 8,
+              spreadRadius: 2,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image with gradient overlay
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(14)),
+                  child: Image.asset(
+                    mess['image']!,
+                    height: 130,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                // Rating badge
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          mess['rating']!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Name
+                  Text(
+                    mess['name']!,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+
+                  // Description
+                  Text(
+                    mess['description']!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Time & Delivery info
+                  Row(
+                    children: [
+                      Icon(Icons.access_time,
+                          size: 14, color: Colors.grey.shade600),
+                      const SizedBox(width: 4),
+                      Text(
+                        mess['time']!,
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        Icons.delivery_dining,
+                        size: 16,
+                        color: mess['delivery'] == "Free"
+                            ? Colors.green
+                            : Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        mess['delivery']!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: mess['delivery'] == "Free"
+                              ? Colors.green
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    // सध्या कोणता mess आहे ते घेतो
     final currentMess = widget.mess.isNotEmpty ? widget.mess.first : null;
+
+    // Filter similar messes (exclude current one)
+    final similarMesses = widget.allMesses
+        .where((mess) => mess['name'] != currentMess?['name'])
+        .toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -254,9 +418,10 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Image.asset("assets/icons/back.png", width: 24),
-          onPressed: () => Navigator.pop(context),
-        ),
+            icon: Image.asset("assets/icons/back.png", width: 24),
+            onPressed: () {
+              Navigator.pop(context, menuList);
+            }),
       ),
       bottomNavigationBar:
           _distinctItemCount > 0 ? _buildCartButton(l10n) : null,
@@ -270,8 +435,7 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                   // ---------- HEADER ----------
                   if (currentMess != null) ...[
                     Row(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // 👈 TOP align
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
@@ -285,12 +449,10 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment.start, // 👈 TOP
+                            mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // TITLE – directly at top
                               Text(
                                 currentMess['name'] ?? '',
                                 style: const TextStyle(
@@ -299,10 +461,7 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                                   height: 1.0,
                                 ),
                               ),
-
                               const SizedBox(height: 6),
-
-                              // ⭐ RATING + PURE VEG
                               Row(
                                 children: [
                                   const Icon(Icons.star,
@@ -328,10 +487,7 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                                   ),
                                 ],
                               ),
-
                               const SizedBox(height: 6),
-
-                              // DESCRIPTION
                               Text(
                                 currentMess['description'] ?? '',
                                 style: const TextStyle(
@@ -372,7 +528,53 @@ class _MessMenuScreenState extends State<MessMenuScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 80),
+
+                  // ---------- 🔥 DISCOVER SIMILAR MEALS SECTION ----------
+                  if (similarMesses.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+
+                    // Section Header
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.discoverSimilarMeals,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: const Color(0xFF870474),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Explore other popular tiffin services",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Horizontal Scrollable List
+                    SizedBox(
+                      height: 240,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: similarMesses.length,
+                        itemBuilder: (_, i) =>
+                            _buildSimilarMealCard(similarMesses[i], l10n),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -407,7 +609,6 @@ class MenuItemCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
@@ -418,8 +619,6 @@ class MenuItemCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-
-            // name + price
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,8 +636,6 @@ class MenuItemCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // rating + qty controls
             Column(
               children: [
                 Row(
